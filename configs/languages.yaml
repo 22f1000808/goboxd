@@ -1,0 +1,12 @@
+languages:
+  - id: py3
+    name: Python 3
+    source_filename: solution.py
+    run:
+      cmd: /usr/bin/python3
+      args: ["{{source}}"]
+      limits:
+        wall_time_s: 9
+        memory_kb: 102400
+        max_processes: 100
+    smoke_probe: ["--version"]

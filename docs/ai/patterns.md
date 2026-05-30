@@ -1,10 +1,23 @@
-## Deferred cleanup with error capture
+## Bounded Output capture
 
-**Context:** You need cleanup (deleting a temp directory) to run on every exit path from a function, including early returns on error.
-But you also need to capture the cleanup error without shadowing the original error.
+**Context:** The buggy code can flood stdout/stderr. I cap output at 64KiB without ever buffering more than this in memory even if process writes more than this.
 
 **Pattern:**
-Use a named return value and a deferred function that checks whether the original error is nil before overwriting it with the cleanup error.
+The output error or the program delibritly to create overload ouput can load the output capture.
 
 **Where we used it:**
-boxd/runner.go, the runSandbox function. The jail directory cleanup is deferred immediately after creation. If the run succeeds but cleanup fails, the cleanup error is returned. If the run fails, the run error takes precedence.
+`capBuffer` is used to wraps `bytes.Buffer` with a byte couter and a hard cap.
+
+
+
+## Cleanup with workspace isolation
+
+ **Context:** In runner every runner invocation creates a temporary workspace directory that must be removed at the time of success failure or panic and cleanup failure should be logged but must never mask the original execution error. 
+ 
+ **Pattern:**
+ Immediately after the `newWorkspace()` succeeds function calls `osRemovAll(ws.HostRoot)`.
+
+ **Where we used it:**
+ `internal/runner/runner.go` inside `Runner.Run()`.
+
+ 

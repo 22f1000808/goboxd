@@ -1,0 +1,7 @@
+{
+    "language": "py3",
+    "source": "print(\"hi\")\n",
+    "tests": [
+      {"stdin": "", "expected_stdout": "hi\n"}
+    ]
+}
