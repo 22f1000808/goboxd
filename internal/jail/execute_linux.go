@@ -11,7 +11,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -19,8 +18,10 @@ import (
 const outputCap = 64 * 1024
 
 func Execute(ctx context.Context, nsjailBin string, job Job) (Outcome, error) {
-	if err := writeCgroupLimits(job.Workspace.CgroupPath, job.MemoryKB, job.MaxProcesses); err != nil {
-		_ = err
+	if job.Workspace.CgroupPath != "" {
+		if err := CreateCgroup(job.Workspace.CgroupPath, job.MemoryKB, job.MaxProcesses); err != nil {
+			_ = err
+		}
 	}
 
 	cfgPath := filepath.Join(job.Workspace.HostRoot, "nsjail.cfg")
@@ -78,6 +79,13 @@ func Execute(ctx context.Context, nsjailBin string, job Job) (Outcome, error) {
 		o.MemoryPeakKB = int64(peak / 1024)
 	}
 
+	cg := ReadCgroupOutcome(job.Workspace.CgroupPath)
+	if cg.MemoryPeakKB > o.MemoryPeakKB {
+		o.MemoryPeakKB = cg.MemoryPeakKB
+	}
+	o.OOMKilled = cg.OOMKilled
+	o.PIDsExhausted = cg.PIDsExhausted
+
 	if err != nil && cmd.ProcessState == nil {
 		return o, fmt.Errorf("nsjail launch: %w", err)
 	}
@@ -105,14 +113,6 @@ func writeCgroupLimits(cgPath string, memKB, pidsMax int) error {
 	}
 
 	return nil
-}
-
-func readUint64File(p string) (uint64, error) {
-	b, err := os.ReadFile(p)
-	if err != nil {
-		return 0, err
-	}
-	return strconv.ParseUint(strings.TrimSpace(string(b)), 10, 64)
 }
 
 type capBuffer struct {

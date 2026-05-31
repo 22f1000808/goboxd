@@ -41,6 +41,8 @@ rlimit_stack: 0
 
 cgroupv2_mount: "{{ pbEscape .CgroupPath }}"
 
+envar: "PATH=/bin:/usr/bin"
+
 {{ if not .AllowNetwork -}}
 clone_newnet: true
 {{- end }}

@@ -35,14 +35,14 @@ type BuildResult struct {
 	Status     string `json:"status"`
 	Stdout     string `json:"stdout,omitempty"`
 	Stderr     string `json:"stderr,omitempty"`
-	DurationMS int64  `json:"duration_ms"`
+	DurationMS int64  `json:"duration_ms,omitempty"`
 }
 
 type TestResult struct {
 	Status       string `json:"status"`
 	Stdout       string `json:"stdout,omitempty"`
 	Stderr       string `json:"stderr,omitempty"`
-	DurationMS   int64  `json:"duration_ms"`
+	DurationMS   int64  `json:"duration_ms,omitempty"`
 	MemoryPeakKB int64  `json:"memory_peak_kb,omitempty"`
 }
 

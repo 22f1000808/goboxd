@@ -6,7 +6,12 @@ import (
 	"goboxd/internal/types"
 )
 
-func TestClassifyPhase1(t *testing.T) {
+func TestClassify(t *testing.T) {
+	const (
+		sigKILL = 9
+		sigSEGV = 11
+		sigXFSZ = 25
+	)
 	cases := []struct {
 		name     string
 		o        Outcome
@@ -14,12 +19,18 @@ func TestClassifyPhase1(t *testing.T) {
 		want     string
 	}{
 		{"accepted exact", Outcome{Stdout: []byte("hi\n")}, "hi\n", types.StatusAccepted},
-		{"whitespace diff", Outcome{Stdout: []byte("hi \n")}, "hi\n", types.StatusOutputWhitespaceDiff},
-		{"whitespace diff2", Outcome{Stdout: []byte("hi\n")}, "hi", types.StatusOutputWhitespaceDiff},
+		{"whitespace diff", Outcome{Stdout: []byte("hi \n")}, "hi", types.StatusOutputWhitespaceDiff},
 		{"wrong output", Outcome{Stdout: []byte("bye\n")}, "hi\n", types.StatusWrongOutput},
-		{"runtime err exit 1", Outcome{ExitCode: 1, Stdout: []byte("")}, "", types.StatusRuntimeError},
-		{"runtime err signal", Outcome{Signal: 11}, "", types.StatusRuntimeError},
-		{"time exceeded", Outcome{TimedOut: true}, "x", types.StatusTimeExceeded},
+		{"runtime err exit 1", Outcome{ExitCode: 1}, "", types.StatusRuntimeError},
+		{"runtime err exit 139", Outcome{ExitCode: 139}, "", types.StatusRuntimeError},
+		{"sigkill no cgroup -> time", Outcome{Signal: sigKILL}, "", types.StatusTimeExceeded},
+		{"sigsegv -> runtime", Outcome{Signal: sigSEGV}, "", types.StatusRuntimeError},
+		{"sigxfsz -> runtime", Outcome{Signal: sigXFSZ}, "", types.StatusRuntimeError},
+		{"oom -> memory", Outcome{Signal: sigKILL, OOMKilled: true}, "", types.StatusMemoryExceeded},
+		{"pids exhausted -> runtime", Outcome{Signal: sigKILL, PIDsExhausted: true}, "", types.StatusRuntimeError},
+		{"timed out no signal", Outcome{TimedOut: true}, "x", types.StatusTimeExceeded},
+		{"timed out with sigkill", Outcome{TimedOut: true, Signal: sigKILL}, "x", types.StatusTimeExceeded},
+		{"oom beats timed out", Outcome{TimedOut: true, OOMKilled: true, Signal: sigKILL}, "x", types.StatusMemoryExceeded},
 	}
 
 	for _, c := range cases {

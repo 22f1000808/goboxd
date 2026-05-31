@@ -92,3 +92,51 @@ func TestLoadLanguagesRejectsDuplicateID(t *testing.T) {
 		t.Fatal("expected duplicate id error")
 	}
 }
+
+func TestLoadLanguagesRejectsMixedFlagsPlaceholder(t *testing.T) {
+	body := `languages:
+  - id: cpp
+    source_filename: solution.cpp
+    artifact: solution
+    build:
+      cmd: /usr/bin/g++
+      args: ["--opts={{flags}}", "-o", "{{artifact}}", "{{source}}"]
+      limits: { wall_time_s: 5, memory_kb: 1024, max_processes: 10 }
+    run:
+      cmd: ./{{artifact}}
+      limits: { wall_time_s: 5, memory_kb: 1024, max_processes: 1 }`
+
+	p := writeTemp(t, "langs.yaml", body)
+	if _, err := LoadLanguages(p); err == nil {
+		t.Fatal("expected error for {{flags}} mixed with other text")
+	}
+}
+
+func TestLoadLanguagesAcceptsCppBuildPhase(t *testing.T) {
+	body := `languages:
+  - id: cpp
+    source_filename: solution.cpp
+    artifact: solution
+    build:
+      cmd: /usr/bin/g++
+      args: ["{{flags}}", "-o", "{{artifact}}", "{{source}}"]
+      limits: { wall_time_s: 5, memory_kb: 524288, max_processes: 100 }
+      flag_allowlist: ["-O2", "-Wall", "-std=*"]
+    run:
+      cmd: ./{{artifact}}
+      limits: { wall_time_s: 1, memory_kb: 65536, max_processes: 16 }`
+
+	p := writeTemp(t, "langs.yaml", body)
+	r, err := LoadLanguages(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	l, _ := r.Lookup("cpp")
+	if l.Build == nil || l.Artifact != "solution" {
+		t.Fatalf("cpp build/artifact not loaded: %v", l)
+	}
+	rules := l.BuildFlagRules()
+	if !Allows(rules, "-std=c++17") || Allows(rules, "-fplugin=evil") {
+		t.Fatalf("flag rules wrong")
+	}
+}

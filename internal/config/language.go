@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -132,6 +133,13 @@ func validateLanguage(l *LanguageSpec) error {
 		if l.Artifact == "" {
 			return fmt.Errorf("language with build phase needs artifact")
 		}
+		if err := validateArgsTemplate(l.Build.Args); err != nil {
+			return fmt.Errorf("build.args: %w", err)
+		}
+	}
+
+	if err := validateArgsTemplate(l.Run.Args); err != nil {
+		return fmt.Errorf("run.args: %w", err)
 	}
 
 	switch l.SourceFilenameStrategy {
@@ -145,5 +153,17 @@ func validateLanguage(l *LanguageSpec) error {
 		return fmt.Errorf("unknown source_filename_strategy %q", l.SourceFilenameStrategy)
 	}
 
+	return nil
+}
+
+func validateArgsTemplate(args []string) error {
+	for _, a := range args {
+		if a == "{{flags}}" {
+			continue
+		}
+		if strings.Contains(a, "{{flags}}") {
+			return fmt.Errorf("element %q mixes {{flags}} with other text;\n{{flags}} must be a whole element", a)
+		}
+	}
 	return nil
 }

@@ -7,28 +7,40 @@ import (
 	"goboxd/internal/jail"
 )
 
-func newWorkspace(root string) (jail.Workspace, func(), error) {
-	if err := os.MkdirAll(root, 0o700); err != nil {
+type workspaceOpts struct {
+	JailRoot     string
+	CgroupParent string
+}
+
+func newWorkspace(opts workspaceOpts) (jail.Workspace, func(), error) {
+	if err := os.MkdirAll(opts.JailRoot, 0700); err != nil {
 		return jail.Workspace{}, func() {}, err
 	}
-	dir, err := os.MkdirTemp(root, "job-")
+
+	dir, err := os.MkdirTemp(opts.JailRoot, "job-*")
 	if err != nil {
 		return jail.Workspace{}, func() {}, err
 	}
 
-	cleanup := func() {
-		_ = os.RemoveAll(dir)
-	}
 	work := filepath.Join(dir, "work")
-	if err := os.MkdirAll(work, 0o755); err != nil {
-		cleanup()
+	if err := os.MkdirAll(work, 0755); err != nil {
+		_ = os.RemoveAll(dir)
 		return jail.Workspace{}, func() {}, err
 	}
 
-	cg := filepath.Join(dir, "cgroup")
-	if err := os.MkdirAll(cg, 0o755); err != nil {
-		cg = ""
+	var cgPath string
+	if opts.CgroupParent != "" {
+		candidate := filepath.Join(opts.CgroupParent, filepath.Base(dir))
+		if err := os.Mkdir(candidate, 0o755); err == nil {
+			cgPath = candidate
+		}
 	}
 
-	return jail.Workspace{HostRoot: dir, SandboxPath: work, CgroupPath: cg}, cleanup, nil
+	cleanup := func() {
+		if cgPath != "" {
+			_ = jail.RemoveCgroup(cgPath)
+		}
+		_ = os.RemoveAll(dir)
+	}
+	return jail.Workspace{HostRoot: dir, SandboxPath: work, CgroupPath: cgPath}, cleanup, nil
 }

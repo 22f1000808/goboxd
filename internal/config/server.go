@@ -20,6 +20,7 @@ type ServerConfig struct {
 	JailRootDir       string `yaml:"jail_root_dir"`
 	NSJailBinary      string `yaml:"nsjail_binary"`
 	CGroupV2Mount     string `yaml:"cgroupv2_mount"`
+	CgroupParent      string `yaml:"cgroup_parent"`
 }
 
 func LoadServer(path string) (*ServerConfig, error) {
@@ -87,6 +88,10 @@ func (c *ServerConfig) applyDefaults() {
 
 	if c.CGroupV2Mount == "" {
 		c.CGroupV2Mount = "/sys/fs/cgroup"
+	}
+
+	if c.CgroupParent == "" {
+		c.CgroupParent = c.CGroupV2Mount + "/goboxd"
 	}
 }
 

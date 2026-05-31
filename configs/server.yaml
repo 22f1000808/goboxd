@@ -9,4 +9,4 @@ max_tests: 50
 jail_root_dir: /var/lib/goboxd/jails
 nsjail_binary: /usr/local/bin/nsjail
 cgroupv2_mount: /sys/fs/cgroup
-#cgroup_parent: ""                     
+cgroup_parent: ""                     

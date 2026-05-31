@@ -3,8 +3,11 @@ package runner
 import "goboxd/internal/types"
 
 func resolveTopLevel(buildStatus string, tests []types.TestResult) string {
-	if buildStatus == types.BuildStatusFailed {
+	switch buildStatus {
+	case types.BuildStatusFailed:
 		return types.StatusBuildFailed
+	case types.BuildStatusInternalError:
+		return types.StatusInternalError
 	}
 
 	rank := map[string]int{
@@ -12,10 +15,10 @@ func resolveTopLevel(buildStatus string, tests []types.TestResult) string {
 		types.StatusOutputWhitespaceDiff: 1,
 		types.StatusWrongOutput:          2,
 		types.StatusTimeExceeded:         3,
-		types.StatusMemoryExceeded:       4,
-		types.StatusRuntimeError:         5,
-		types.StatusNotExecuted:          6,
-		types.StatusInternalError:        7,
+		types.StatusMemoryExceeded:       3,
+		types.StatusRuntimeError:         4,
+		types.StatusNotExecuted:          5,
+		types.StatusInternalError:        6,
 	}
 
 	worst := types.StatusAccepted
@@ -24,6 +27,5 @@ func resolveTopLevel(buildStatus string, tests []types.TestResult) string {
 			worst = t.Status
 		}
 	}
-
 	return worst
 }

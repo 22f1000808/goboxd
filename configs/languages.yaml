@@ -10,3 +10,34 @@ languages:
         memory_kb: 102400
         max_processes: 100
     smoke_probe: ["--version"]
+
+  - id: cpp
+    name: C++
+    source_filename: solution.cpp
+    artifact: solution
+    build:
+      cmd: /usr/bin/g++
+      args: ["{{flags}}", "-o", "{{artifact}}", "{{source}}"]
+      limits:
+        wall_time_s: 20
+        memory_kb: 1048576
+        max_processes: 100
+      flag_allowlist:
+        - "-O0"
+        - "-O1"
+        - "-O2"
+        - "-O3"
+        - "-Wall"
+        - "-Wextra"
+        - "-std=*"
+        - "-pedantic"
+        - "-g"
+        - "-pipe"
+    run:
+      cmd: ./{{artifact}}
+      limits:
+        wall_time_s: 3
+        memory_kb: 524288
+        max_processes: 64
+    smoke_probe_cmd: /usr/bin/g++
+    smoke_probe: ["--version"]
