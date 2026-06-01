@@ -1,0 +1,8 @@
+{
+  "language": "cpp",
+  "source": "#include <iostream>\n#include <thread>\n#include <chrono>\nint main(){ std::this_thread::sleep_for(std::chrono::seconds(10)); return 0; }\n",
+  "run": {"limits": {"wall_time_s": 2}},
+  "tests": [
+    {"stdin": "", "expected_stdout": ""}
+  ]
+}

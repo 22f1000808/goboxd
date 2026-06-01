@@ -1,0 +1,8 @@
+{
+  "language": "cpp",
+  "source": "#include <iostream>\nint main(){ std::cout << \"hi\\n\"; return 0; }\n",
+  "build": {"flags": ["-O2", "-Wall"]},
+  "tests": [
+    {"stdin": "", "expected_stdout": "hi\n"}
+  ]
+}

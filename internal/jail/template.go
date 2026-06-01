@@ -39,9 +39,12 @@ rlimit_nofile: 64
 rlimit_nproc: 0
 rlimit_stack: 0
 
+{{ if .CgroupPath -}}
 cgroupv2_mount: "{{ pbEscape .CgroupPath }}"
+{{- end }}
 
 envar: "PATH=/bin:/usr/bin"
+envar: "HOME=/tmp"
 
 {{ if not .AllowNetwork -}}
 clone_newnet: true
@@ -57,10 +60,17 @@ clone_newcgroup: true
 uidmap { inside_id: "0" outside_id: "0" count: 1 }
 gidmap { inside_id: "0" outside_id: "0" count: 1 }
 
+mount { src: "/usr" dst: "/usr" is_bind: true rw: false }
+mount { src: "/lib" dst: "/lib" is_bind: true rw: false }
+mount { src: "/lib64" dst: "/lib64" is_bind: true rw: false }
+mount { src: "/bin" dst: "/bin" is_bind: true rw: false }
+mount { src: "/sbin" dst: "/sbin" is_bind: true rw: false }
+mount { src: "/etc" dst: "/etc" is_bind: true rw: false }
 {{ range .Mounts -}}
 mount { src: "{{ pbEscape .HostPath }}" dst: "{{ pbEscape .JailPath }}" is_bind: true rw: {{ if .ReadOnly }}false{{ else }}true{{ end }} }
 {{ end -}}
 mount { dst: "/tmp" fstype: "tmpfs" rw: true is_bind: false }
+mount { dst: "/dev" fstype: "tmpfs" rw: false is_bind: false }
 mount { dst: "/proc" fstype: "proc" rw: false is_bind: false }
 
 exec_bin {

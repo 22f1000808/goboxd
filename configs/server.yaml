@@ -1,6 +1,6 @@
 http_addr: ":8080"
 max_concurrent_jobs: 0                 # 0 -> runtime.NumCPU()
-max_queue_depth: 0                     # 0 -> 8 * max_concurrent_jobs
+max_queue_depth: 0                     # 0 = unbounded (spec default)
 drain_timeout_s: 45
 readyz_cache_ttl_s: 30
 max_source_bytes: 262144               # 256 KiB
@@ -9,4 +9,3 @@ max_tests: 50
 jail_root_dir: /var/lib/goboxd/jails
 nsjail_binary: /usr/local/bin/nsjail
 cgroupv2_mount: /sys/fs/cgroup
-cgroup_parent: ""                     

@@ -1,0 +1,8 @@
+{
+  "language": "cpp",
+  "source": "#include <iostream>\nint main(){ char *p = new char[1024*1024*512]; for(int i=0;i<1024*1024*512;i++) p[i]='A'; return 0; }\n",
+  "run": {"limits": {"memory_kb": 102400}},
+  "tests": [
+    {"stdin": "", "expected_stdout": ""}
+  ]
+}

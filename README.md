@@ -1,70 +1,61 @@
-<div align="center">
-
 # goboxd
 
-**A Go HTTP service for executing untrusted code in isolated sandboxes.**
+A Go HTTP service that runs untrusted code inside an nsjail sandbox and
+returns per-test results. Hackathon submission for SEEK x Paradox IIT
+Madras 2026.
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Go](https://img.shields.io/badge/Go-1.23-00ADD8.svg?logo=go&logoColor=white)](https://go.dev)
-[![Docker](https://img.shields.io/badge/Docker-Required-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/thesouldev/goboxd/pulls)
+## Framework
 
-</div>
+`net/http` with `http.ServeMux` (Go 1.22 method-prefixed routes). No
+framework dependency, no router middleware tower, fewer moving parts to
+audit when the spec's whole point is sandbox isolation and security.
 
----
+## Status
 
-## Overview
+Working end to end for Python 3 and C++ inside the container. All seven
+documented security holes are closed (see `docs/security.md`). `/healthz`,
+`/readyz`, and `/info` are live. Concurrency is bounded with a
+configurable queue.
 
-goboxd is an HTTP service written in Go that compiles and runs untrusted code inside isolated sandboxes and returns the result. Optional test cases can be supplied to assert behaviour against expected output. It is built for safe execution of code across many languages, with strict isolation, bounded concurrency, and a plug and play language registry.
-
-## Features
-
-- Plug and play language registry driven by YAML
-- Process isolation using Linux namespaces and cgroups
-- Bounded concurrency with request queuing
-- Fully containerised for local development and deployment
-- Per request resource limits for time, memory, and processes
-- Liveness and readiness probes for orchestration
-
-## Getting started
-
-### Prerequisites
-
-- Docker with Compose v2
-
-No Go toolchain or system dependencies are required on the host. Everything runs in containers.
-
-### Installation
-
-```sh
-git clone https://github.com/thesouldev/goboxd.git
-cd goboxd
-make build
-```
-
-### Usage
-
-```sh
-make run          # start the service on :8080
-make test         # run unit tests
-make integration  # run end to end tests
-make lint         # run static analysis
-```
-
-## Project structure
+## Run it
 
 ```
-.
-├── cmd/goboxd/   binary entry point
-├── internal/     private application packages
-├── docs/         api, languages, security, benchmarks, architecture
-└── tests/        integration tests
+git submodule update --init
+make docker-run
 ```
 
-## Contributing
+Then:
 
-Contributions are welcome. Open an issue to discuss substantial changes before sending a pull request.
+```
+curl -s localhost:8080/healthz
+curl -s localhost:8080/readyz
+curl -s -X POST localhost:8080/run \
+  -H 'content-type: application/json' \
+  --data @testdata/py-hello.json
+```
 
-## License
+## Layout
 
-This project is distributed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for the full text.
+- `cmd/goboxd` - binary entry point
+- `internal/` - `types`, `config`, `validator`, `limiter`, `jail`,
+  `runner`, `health`, `logging`, `api`
+- `configs/` - `server.yaml` and `languages.yaml`
+- `external/nsjail` - git submodule pinned to upstream tag `3.4`, built
+  inside the image
+- `docs/` - `api.md`, `languages.md`, `security.md`, `benchmarks.md`,
+  `architecture.md`
+- `tests/` - black-box HTTP end-to-end tests (build tag `integration`)
+- `testdata/` - sample request bodies
+- `scripts/load.sh` - vegeta load probe
+- `testdata/check.sh` - full pre-submission verification (phases A-H)
+
+## Develop
+
+```
+make build test lint
+```
+
+`make test` is unit-only and runs on any OS. `make integration` brings
+the container up and runs the `tests/` suite against it. `make check`
+runs the full pre-submission verification script.
+See `docs/architecture.md` for the design walk-through and `docs/benchmarks.md` for concurrency numbers.

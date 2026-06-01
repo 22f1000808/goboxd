@@ -11,7 +11,7 @@ import (
 
 const (
 	FilenameFixed          = "fixed"
-	FilenameClientSupplied = "client_supplied"
+	FilenameClientSupplied = "from_request"
 )
 
 type LanguageSpec struct {
@@ -56,6 +56,16 @@ func (r *Registry) Lookup(id string) (*LanguageSpec, bool) {
 
 func (r *Registry) IDs() []string {
 	return append([]string(nil), r.order...)
+}
+
+// All returns the language specs in the registry's stable order.
+// Read-only; callers must not mutate the returned pointers.
+func (r *Registry) All() []*LanguageSpec {
+	out := make([]*LanguageSpec, 0, len(r.order))
+	for _, id := range r.order {
+		out = append(out, r.languages[id])
+	}
+	return out
 }
 
 func (l *LanguageSpec) BuildFlagRules() []FlagRule {

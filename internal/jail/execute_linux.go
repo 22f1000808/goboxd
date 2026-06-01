@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"syscall"
 	"time"
 )
@@ -72,6 +71,18 @@ func Execute(ctx context.Context, nsjailBin string, job Job) (Outcome, error) {
 		o.ExitCode = cmd.ProcessState.ExitCode()
 		if ws, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok && ws.Signaled() {
 			o.Signal = int(ws.Signal())
+			// SIGKILL (9) indicates timeout from nsjail
+			if o.Signal == 9 {
+				o.TimedOut = true
+			}
+		}
+	}
+
+	// Also detect timeout if duration matches the expected timeout (within 100ms tolerance)
+	if !o.TimedOut && job.WallTimeS > 0 {
+		expectedDurMS := int64(job.WallTimeS * 1000)
+		if o.DurationMS >= expectedDurMS-100 && o.DurationMS <= expectedDurMS+500 {
+			o.TimedOut = true
 		}
 	}
 
@@ -91,28 +102,6 @@ func Execute(ctx context.Context, nsjailBin string, job Job) (Outcome, error) {
 	}
 
 	return o, nil
-}
-
-func writeCgroupLimits(cgPath string, memKB, pidsMax int) error {
-	if cgPath == "" {
-		return nil
-	}
-
-	if memKB > 0 {
-		if err := os.WriteFile(filepath.Join(cgPath, "memory.max"),
-			[]byte(strconv.FormatInt(int64(memKB)*1024, 10)), 0644); err != nil {
-			return err
-		}
-	}
-
-	if pidsMax > 0 {
-		if err := os.WriteFile(filepath.Join(cgPath, "pids.max"),
-			[]byte(strconv.Itoa(pidsMax)), 0644); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 type capBuffer struct {

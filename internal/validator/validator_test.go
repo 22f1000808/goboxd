@@ -14,11 +14,13 @@ func loadFixture(t *testing.T) (*config.ServerConfig, *config.Registry) {
 	t.Helper()
 	dir := t.TempDir()
 	srv := filepath.Join(dir, "server.yaml")
-	os.WriteFile(srv, []byte(`max_source_bytes: 100
+	if err := os.WriteFile(srv, []byte(`max_source_bytes: 100
 max_stdin_bytes: 50
-max_tests: 50`), 0644)
+max_tests: 50`), 0644); err != nil {
+		t.Fatal(err)
+	}
 	langs := filepath.Join(dir, "langs.yaml")
-	os.WriteFile(langs, []byte(`languages:
+	if err := os.WriteFile(langs, []byte(`languages:
   - id: py3
     source_filename: solution.py
     run:
@@ -26,7 +28,9 @@ max_tests: 50`), 0644)
       args: ["{{source}}"]
       limits: { wall_time_s: 9, memory_kb: 102400, max_processes: 100 }
       flag_allowlist: ["-O", "-W*"]
-`), 0644)
+`), 0644); err != nil {
+		t.Fatal(err)
+	}
 	sc, err := config.LoadServer(srv)
 	if err != nil {
 		t.Fatal(err)

@@ -19,7 +19,7 @@ func TestResolveTopLevel(t *testing.T) {
 		{"build ok lets tests decide", types.BuildStatusOK, []types.TestResult{{Status: types.StatusAccepted}, {Status: types.StatusAccepted}}, types.StatusAccepted},
 		{"runtime beats accepted", "", []types.TestResult{{Status: types.StatusAccepted}, {Status: types.StatusRuntimeError}}, types.StatusRuntimeError},
 		{"memory exceeded ranks with time", "", []types.TestResult{{Status: types.StatusAccepted}, {Status: types.StatusMemoryExceeded}, {Status: types.StatusTimeExceeded}}, types.StatusMemoryExceeded},
-		{"whitespace beats accepted", "", []types.TestResult{{Status: types.StatusAccepted}, {Status: types.StatusOutputWhitespaceDiff}}, types.StatusOutputWhitespaceDiff},
+		{"whitespace beats accepted", "", []types.TestResult{{Status: types.StatusAccepted}, {Status: types.StatusOutputWhitespaceMismatch}}, types.StatusOutputWhitespaceMismatch},
 		{"internal beats all", "", []types.TestResult{{Status: types.StatusAccepted}, {Status: types.StatusInternalError}, {Status: types.StatusRuntimeError}}, types.StatusInternalError},
 	}
 

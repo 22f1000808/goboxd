@@ -1,7 +1,11 @@
+// internal/runner/resolve.go
 package runner
 
 import "goboxd/internal/types"
 
+// resolveTopLevel implements the spec's precedence rule for the top-level
+// status. Build precedence is wired in Phase 2; in Phase 1 buildStatus is
+// always "".
 func resolveTopLevel(buildStatus string, tests []types.TestResult) string {
 	switch buildStatus {
 	case types.BuildStatusFailed:
@@ -10,22 +14,10 @@ func resolveTopLevel(buildStatus string, tests []types.TestResult) string {
 		return types.StatusInternalError
 	}
 
-	rank := map[string]int{
-		types.StatusAccepted:             0,
-		types.StatusOutputWhitespaceDiff: 1,
-		types.StatusWrongOutput:          2,
-		types.StatusTimeExceeded:         3,
-		types.StatusMemoryExceeded:       3,
-		types.StatusRuntimeError:         4,
-		types.StatusNotExecuted:          5,
-		types.StatusInternalError:        6,
-	}
-
-	worst := types.StatusAccepted
 	for _, t := range tests {
-		if rank[t.Status] > rank[worst] {
-			worst = t.Status
+		if t.Status != types.StatusAccepted {
+			return t.Status
 		}
 	}
-	return worst
+	return types.StatusAccepted
 }

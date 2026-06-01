@@ -20,6 +20,11 @@ func Classify(o Outcome, expected string) string {
 		return types.StatusRuntimeError
 	}
 
+	// Check timeout before checking other signals
+	if o.TimedOut {
+		return types.StatusTimeExceeded
+	}
+
 	if o.Signal != 0 {
 		switch o.Signal {
 		case sigXFSZ:
@@ -44,7 +49,7 @@ func Classify(o Outcome, expected string) string {
 	}
 
 	if strings.TrimSpace(got) == strings.TrimSpace(expected) {
-		return types.StatusOutputWhitespaceDiff
+		return types.StatusOutputWhitespaceMismatch
 	}
 
 	return types.StatusWrongOutput

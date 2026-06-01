@@ -19,7 +19,7 @@ func TestClassify(t *testing.T) {
 		want     string
 	}{
 		{"accepted exact", Outcome{Stdout: []byte("hi\n")}, "hi\n", types.StatusAccepted},
-		{"whitespace diff", Outcome{Stdout: []byte("hi \n")}, "hi", types.StatusOutputWhitespaceDiff},
+		{"whitespace diff", Outcome{Stdout: []byte("hi \n")}, "hi", types.StatusOutputWhitespaceMismatch},
 		{"wrong output", Outcome{Stdout: []byte("bye\n")}, "hi\n", types.StatusWrongOutput},
 		{"runtime err exit 1", Outcome{ExitCode: 1}, "", types.StatusRuntimeError},
 		{"runtime err exit 139", Outcome{ExitCode: 139}, "", types.StatusRuntimeError},

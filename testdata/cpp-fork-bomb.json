@@ -1,0 +1,8 @@
+{
+  "language": "cpp",
+  "source": "#include <unistd.h>\n#include <sys/types.h>\nint main(){ while(1) { fork(); } return 0; }\n",
+  "run": {"limits": {"max_processes": 10}},
+  "tests": [
+    {"stdin": "", "expected_stdout": ""}
+  ]
+}

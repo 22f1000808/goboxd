@@ -1,0 +1,9 @@
+{
+  "language": "cpp",
+  "source": "#include <iostream>\nint main(){ std::string line; while(std::getline(std::cin, line)) { std::cout << \"[\" << line << \"]\\n\"; } return 0; }\n",
+  "tests": [
+    {"stdin": "hello", "expected_stdout": "[hello]\n"},
+    {"stdin": "world", "expected_stdout": "[world]\n"},
+    {"stdin": "test", "expected_stdout": "[test]\n"}
+  ]
+}

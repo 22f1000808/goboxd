@@ -1,0 +1,7 @@
+{
+  "language": "cpp",
+  "source": "int main(){ this is not valid c++; }\n",
+  "tests": [
+    {"stdin": "", "expected_stdout": "x"}
+  ]
+}
