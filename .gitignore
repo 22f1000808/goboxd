@@ -8,6 +8,12 @@
 *.so
 *.dylib
 
+# Compiled binary outputs
+bin/
+dist/
+goboxd
+/goboxd
+
 # Test binary, built with `go test -c`
 *.test
 
@@ -31,4 +37,9 @@ go.work.sum
 # .idea/
 # .vscode/
 
+# Planning docs and AI journals (not submission artifacts)
 rad/
+docs/ai/
+
+# Tool caches
+.tools/
