@@ -43,8 +43,12 @@ rlimit_stack: 0
 cgroupv2_mount: "{{ pbEscape .CgroupPath }}"
 {{- end }}
 
-envar: "PATH=/bin:/usr/bin"
+envar: "PATH=/bin:/usr/bin:/usr/local/bin"
 envar: "HOME=/tmp"
+envar: "GOPATH=/tmp/gopath"
+envar: "GOCACHE=/tmp/gocache"
+envar: "GOROOT=/usr/lib/go-1.19"
+envar: "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8"
 
 {{ if not .AllowNetwork -}}
 clone_newnet: true

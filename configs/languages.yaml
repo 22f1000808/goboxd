@@ -89,6 +89,7 @@ languages:
   - id: java
     name: Java
     source_filename_strategy: from_request
+    artifact_filename_strategy: from_request
     artifact: Main
     build:
       cmd: /usr/bin/javac

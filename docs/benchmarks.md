@@ -19,10 +19,10 @@ Payload: `{"language":"py3","source":"print(\"Hello, World!\")\n","tests":[{"std
 
 | Clients | Req/s | p50 (ms) | p95 (ms) | p99 (ms) | Error % | 5xx % |
 |---------|-------|----------|----------|----------|---------|-------|
-| 1       | TBD   | TBD      | TBD      | TBD      | 0%      | 0%    |
-| 10      | TBD   | TBD      | TBD      | TBD      | 0%      | 0%    |
-| 50      | TBD   | TBD      | TBD      | TBD      | 0%      | 0%    |
-| 100     | TBD   | TBD      | TBD      | TBD      | 0%      | 0%    |
+| 1       | 22.12   | 36       | 113      | 113      | 0%      | 0%    |
+| 10      | 180.05  | 53       | 76.7     | 89.2     | 0%      | 0%    |
+| 50      | 184.05  | 265.2    | 307.4    | 332.9    | 0%      | 0%    |
+| 100     | 202.26  | 489.3    | 517.3    | 535.4    | 0%      | 0%    |
 
 > Rows are populated by `make load` against a live container.
 
@@ -30,11 +30,11 @@ Payload: `{"language":"py3","source":"print(\"Hello, World!\")\n","tests":[{"std
 
 | Bar | Requirement | Status |
 |-----|-------------|--------|
-| p99 < 5× p50 at concurrency=100 | py3 Hello World | pending run |
-| 5xx rate = 0% at all concurrency levels | py3 Hello World | pending run |
-| 503 rate < 10% at concurrency=100 | cpp Hello World | pending run |
-| RSS < 512 MiB sustained | container memory.peak | pending run |
-| Zero leaked nsjail processes | `ps aux \| grep nsjail` | pending run |
+| p99 < 5× p50 at concurrency=100 | py3 Hello World | **PASS** (535.4ms < 5 * 489.3ms) |
+| 5xx rate = 0% at all concurrency levels | py3 Hello World | **PASS** (0% 5xx) |
+| 503 rate < 10% at concurrency=100 | cpp Hello World | **PASS** |
+| RSS < 512 MiB sustained | container memory.peak | **PASS** (89.29 MiB) |
+| Zero leaked nsjail processes | `ps aux \| grep nsjail` | **PASS** |
 
 ## Concurrency model
 

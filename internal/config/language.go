@@ -15,15 +15,16 @@ const (
 )
 
 type LanguageSpec struct {
-	ID                     string     `yaml:"id"`
-	Name                   string     `yaml:"name"`
-	SourceFilename         string     `yaml:"source_filename,omitempty"`
-	SourceFilenameStrategy string     `yaml:"source_filename_strategy,omitempty"`
-	Artifact               string     `yaml:"artifact,omitempty"`
-	Build                  *PhaseSpec `yaml:"build,omitempty"`
-	Run                    *PhaseSpec `yaml:"run"`
-	SmokeProbeCmd          string     `yaml:"smoke_probe_cmd,omitempty"`
-	SmokeProbe             []string   `yaml:"smoke_probe,omitempty"`
+	ID                       string     `yaml:"id"`
+	Name                     string     `yaml:"name"`
+	SourceFilename           string     `yaml:"source_filename,omitempty"`
+	SourceFilenameStrategy   string     `yaml:"source_filename_strategy,omitempty"`
+	Artifact                 string     `yaml:"artifact,omitempty"`
+	ArtifactFilenameStrategy string     `yaml:"artifact_filename_strategy,omitempty"`
+	Build                    *PhaseSpec `yaml:"build,omitempty"`
+	Run                      *PhaseSpec `yaml:"run"`
+	SmokeProbeCmd            string     `yaml:"smoke_probe_cmd,omitempty"`
+	SmokeProbe               []string   `yaml:"smoke_probe,omitempty"`
 
 	flagRules struct {
 		build []FlagRule
