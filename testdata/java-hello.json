@@ -1,0 +1,8 @@
+{
+  "language": "java",
+  "source": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello, World!\");\n    }\n}\n",
+  "source_filename": "Main.java",
+  "tests": [
+    {"stdin": "", "expected_stdout": "Hello, World!\n"}
+  ]
+}

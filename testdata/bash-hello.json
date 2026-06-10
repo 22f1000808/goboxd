@@ -1,0 +1,7 @@
+{
+  "language": "bash",
+  "source": "echo \"Hello, World!\"\n",
+  "tests": [
+    {"stdin": "", "expected_stdout": "Hello, World!\n"}
+  ]
+}
