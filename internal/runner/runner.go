@@ -46,7 +46,11 @@ func (r *Runner) Run(ctx context.Context, req *types.RunRequest) (*types.RunResp
 	}
 
 	jailSrc := filepath.Join("/work", filename)
+	// Artifact: client may override for from_request strategy languages (e.g. Java).
 	jailArtifact := lang.Artifact
+	if req.ArtifactFilename != "" {
+		jailArtifact = req.ArtifactFilename
+	}
 
 	resp := &types.RunResponse{Tests: make([]types.TestResult, len(req.Tests))}
 

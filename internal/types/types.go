@@ -48,15 +48,15 @@ type TestResult struct {
 }
 
 const (
-	StatusAccepted                  = "accepted"
-	StatusWrongOutput               = "wrong_output"
-	StatusOutputWhitespaceMismatch  = "output_whitespace_mismatch"
-	StatusTimeExceeded              = "time_exceeded"
-	StatusMemoryExceeded            = "memory_exceeded"
-	StatusRuntimeError              = "runtime_error"
-	StatusBuildFailed               = "build_failed"
-	StatusInternalError             = "internal_error"
-	StatusNotExecuted               = "not_executed"
+	StatusAccepted                 = "accepted"
+	StatusWrongOutput              = "wrong_output"
+	StatusOutputWhitespaceMismatch = "output_whitespace_mismatch"
+	StatusTimeExceeded             = "time_exceeded"
+	StatusMemoryExceeded           = "memory_exceeded"
+	StatusRuntimeError             = "runtime_error"
+	StatusBuildFailed              = "build_failed"
+	StatusInternalError            = "internal_error"
+	StatusNotExecuted              = "not_executed"
 )
 
 const (

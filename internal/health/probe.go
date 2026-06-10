@@ -22,7 +22,7 @@ type ReadinessReport struct {
 	Status    string                 `json:"status"`
 	NSJail    ProbeResult            `json:"nsjail"`
 	Languages map[string]ProbeResult `json:"languages"`
-	CachedAt  time.Time              `json:"cached_at"`
+	CachedAt  time.Time              `json:"-"` // internal; not part of spec response shape
 }
 
 func (r ReadinessReport) Ready() bool { return r.Status == StatusReadyOK }

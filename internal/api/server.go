@@ -211,8 +211,15 @@ func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
 	var req types.RunRequest
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, validator.CodeBadJSON, "malformed json")
-		logging.Emit(r.Context(), s.log, &req, "bad_json", time.Since(start), http.StatusBadRequest, validator.CodeBadJSON)
+		// Distinguish HTTP body cap (413) from malformed JSON (400).
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			writeError(w, http.StatusRequestEntityTooLarge, "body_too_large", "request body exceeds server limit")
+			logging.Emit(r.Context(), s.log, &req, "body_too_large", time.Since(start), http.StatusRequestEntityTooLarge, "body_too_large")
+		} else {
+			writeError(w, http.StatusBadRequest, validator.CodeBadJSON, "malformed json")
+			logging.Emit(r.Context(), s.log, &req, "bad_json", time.Since(start), http.StatusBadRequest, validator.CodeBadJSON)
+		}
 		return
 	}
 

@@ -68,8 +68,8 @@ func (l *Limiter) Acquire(ctx context.Context) error {
 	}
 }
 
-func (l *Limiter) Release()          { <-l.sem }
-func (l *Limiter) InFlight() int     { return len(l.sem) }
-func (l *Limiter) Waiting() int      { return int(l.waiting.Load()) }
-func (l *Limiter) Capacity() int     { return cap(l.sem) }
+func (l *Limiter) Release()           { <-l.sem }
+func (l *Limiter) InFlight() int      { return len(l.sem) }
+func (l *Limiter) Waiting() int       { return int(l.waiting.Load()) }
+func (l *Limiter) Capacity() int      { return cap(l.sem) }
 func (l *Limiter) MaxQueueDepth() int { return l.maxQueueDepth }

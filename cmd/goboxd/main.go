@@ -4,9 +4,11 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strconv"
 	"syscall"
@@ -42,6 +44,16 @@ func main() {
 	run := runner.New(srvCfg, reg)
 	stats := health.NewStats()
 	probe := health.NewProbe(reg, srvCfg.NSJailBinary, time.Duration(srvCfg.ReadyzCacheTTLS)*time.Second)
+
+	// Loud boot validation: abort loudly if nsjail or any language toolchain
+	// is broken. Named as a demo-day judging item in the spec.
+	log.Info("running boot validation probes")
+	if err := bootValidate(log, srvCfg.NSJailBinary, reg); err != nil {
+		log.Error("BOOT VALIDATION FAILED - server cannot start safely", "err", err)
+		log.Error("Check that nsjail and all language toolchains are installed and in PATH")
+		os.Exit(1)
+	}
+	log.Info("boot validation passed")
 
 	srv := api.New(api.Options{
 		Server: srvCfg, Registry: reg, Limiter: lim, Jobs: jobs,
@@ -142,5 +154,54 @@ func applyServerEnv(c *config.ServerConfig) {
 		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
 			c.DrainTimeoutS = n
 		}
+	}
+}
+
+// bootValidate synchronously runs every smoke probe (nsjail + all language
+// toolchains). Returns the first error encountered, or nil if all pass.
+// Failure here causes the server to abort with a clear error message.
+func bootValidate(log *slog.Logger, nsjailBin string, reg *config.Registry) error {
+	// 1. Probe nsjail. It may not support --version (3.4 does not), fall back to -h.
+	if _, err := probeCmd(nsjailBin, "--version"); err != nil {
+		if _, err2 := probeCmd(nsjailBin, "-h"); err2 != nil {
+			return fmt.Errorf("nsjail probe failed: %w", err2)
+		}
+	}
+	log.Info("boot probe: nsjail ok")
+
+	// 2. Probe each language toolchain.
+	for _, lang := range reg.All() {
+		bin, args := smokeTarget(lang)
+		if bin == "" {
+			return fmt.Errorf("language %q: no smoke probe binary", lang.ID)
+		}
+		out, err := probeCmd(bin, args...)
+		if err != nil {
+			return fmt.Errorf("language %q (%s %v): probe failed: %w; output: %s", lang.ID, bin, args, err, out)
+		}
+		log.Info("boot probe: language ok", "id", lang.ID, "bin", bin)
+	}
+	return nil
+}
+
+func probeCmd(bin string, args ...string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	out, err := exec.CommandContext(ctx, bin, args...).CombinedOutput()
+	return string(out), err
+}
+
+func smokeTarget(lang *config.LanguageSpec) (string, []string) {
+	args := lang.SmokeProbe
+	if len(args) == 0 {
+		args = []string{"--version"}
+	}
+	switch {
+	case lang.SmokeProbeCmd != "":
+		return lang.SmokeProbeCmd, args
+	case lang.Build != nil && lang.Build.Cmd != "":
+		return lang.Build.Cmd, args
+	default:
+		return lang.Run.Cmd, args
 	}
 }
