@@ -1,14 +1,46 @@
 languages:
-  - id: py3
-    name: Python 3
-    source_filename: solution.py
+  - id: bash
+    name: Bash
+    source_filename: solution.sh
     run:
-      cmd: /usr/bin/python3
+      cmd: /bin/bash
       args: ["{{source}}"]
       limits:
         wall_time_s: 9
-        memory_kb: 102400
+        memory_kb: 65536
+        max_processes: 64
+    smoke_probe: ["--version"]
+
+  - id: c
+    name: C
+    source_filename: solution.c
+    artifact: solution
+    build:
+      cmd: /usr/bin/gcc
+      args: ["{{flags}}", "-o", "{{artifact}}", "{{source}}", "-lm"]
+      limits:
+        wall_time_s: 20
+        memory_kb: 1048576
         max_processes: 100
+      flag_allowlist:
+        - "-O0"
+        - "-O1"
+        - "-O2"
+        - "-O3"
+        - "-Wall"
+        - "-Wextra"
+        - "-std=*"
+        - "-pedantic"
+        - "-g"
+        - "-lm"
+        - "-pipe"
+    run:
+      cmd: ./{{artifact}}
+      limits:
+        wall_time_s: 3
+        memory_kb: 524288
+        max_processes: 64
+    smoke_probe_cmd: /usr/bin/gcc
     smoke_probe: ["--version"]
 
   - id: cpp
@@ -41,3 +73,142 @@ languages:
         max_processes: 64
     smoke_probe_cmd: /usr/bin/g++
     smoke_probe: ["--version"]
+
+  - id: go
+    name: Go
+    source_filename: solution.go
+    run:
+      cmd: /usr/bin/go
+      args: ["run", "{{source}}"]
+      limits:
+        wall_time_s: 30
+        memory_kb: 524288
+        max_processes: 200
+    smoke_probe: ["version"]
+
+  - id: java
+    name: Java
+    source_filename_strategy: from_request
+    artifact: Main
+    build:
+      cmd: /usr/bin/javac
+      args: ["{{flags}}", "{{source}}"]
+      limits:
+        wall_time_s: 30
+        memory_kb: 524288
+        max_processes: 100
+      flag_allowlist:
+        - "-encoding"
+        - "UTF-8"
+        - "-g"
+        - "-verbose"
+    run:
+      cmd: /usr/bin/java
+      args: ["-cp", "/work", "{{artifact}}"]
+      limits:
+        wall_time_s: 10
+        memory_kb: 524288
+        max_processes: 200
+    smoke_probe_cmd: /usr/bin/java
+    smoke_probe: ["-version"]
+
+  - id: javascript
+    name: JavaScript (Node.js)
+    source_filename: solution.js
+    run:
+      cmd: /usr/bin/node
+      args: ["{{source}}"]
+      limits:
+        wall_time_s: 10
+        memory_kb: 524288
+        max_processes: 64
+    smoke_probe_cmd: /usr/bin/node
+    smoke_probe: ["--version"]
+
+  - id: lua
+    name: Lua
+    source_filename: solution.lua
+    run:
+      cmd: /usr/bin/lua5.4
+      args: ["{{source}}"]
+      limits:
+        wall_time_s: 9
+        memory_kb: 131072
+        max_processes: 64
+    smoke_probe: ["-v"]
+
+  - id: py3
+    name: Python 3
+    source_filename: solution.py
+    run:
+      cmd: /usr/bin/python3
+      args: ["{{source}}"]
+      limits:
+        wall_time_s: 9
+        memory_kb: 102400
+        max_processes: 100
+    smoke_probe: ["--version"]
+
+  - id: ruby
+    name: Ruby
+    source_filename: solution.rb
+    run:
+      cmd: /usr/bin/ruby
+      args: ["{{source}}"]
+      limits:
+        wall_time_s: 10
+        memory_kb: 262144
+        max_processes: 64
+    smoke_probe: ["--version"]
+
+  - id: rust
+    name: Rust
+    source_filename: solution.rs
+    artifact: solution
+    build:
+      cmd: /usr/bin/rustc
+      args: ["{{flags}}", "-o", "{{artifact}}", "{{source}}"]
+      limits:
+        wall_time_s: 60
+        memory_kb: 1048576
+        max_processes: 200
+      flag_allowlist:
+        - "--edition=*"
+        - "-O"
+        - "-g"
+        - "--release"
+    run:
+      cmd: ./{{artifact}}
+      limits:
+        wall_time_s: 5
+        memory_kb: 524288
+        max_processes: 64
+    smoke_probe_cmd: /usr/bin/rustc
+    smoke_probe: ["--version"]
+
+  - id: verilog
+    name: Verilog (Icarus)
+    source_filename: solution.v
+    artifact: solution.vvp
+    build:
+      cmd: /usr/bin/iverilog
+      args: ["{{flags}}", "-o", "{{artifact}}", "{{source}}"]
+      limits:
+        wall_time_s: 20
+        memory_kb: 524288
+        max_processes: 100
+      flag_allowlist:
+        - "-g2012"
+        - "-g2005"
+        - "-g2001"
+        - "-Wall"
+        - "-v"
+    run:
+      cmd: /usr/bin/vvp
+      args: ["{{artifact}}"]
+      limits:
+        wall_time_s: 10
+        memory_kb: 262144
+        max_processes: 64
+    smoke_probe_cmd: /usr/bin/iverilog
+    smoke_probe: ["-V"]
