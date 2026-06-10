@@ -12,17 +12,18 @@ import (
 // ServerConfig is loaded from configs/server.yaml. Env vars prefixed with
 // GOBOXD_ override individual fields (handled in cmd/goboxd, not here).
 type ServerConfig struct {
-	HTTPAddr          string `yaml:"http_addr"`
-	MaxConcurrentJobs int    `yaml:"max_concurrent_jobs"`
-	MaxQueueDepth     int    `yaml:"max_queue_depth"`
-	DrainTimeoutS     int    `yaml:"drain_timeout_s"`
-	ReadyzCacheTTLS   int    `yaml:"readyz_cache_ttl_s"`
-	MaxSourceBytes    int    `yaml:"max_source_bytes"`
-	MaxStdinBytes     int    `yaml:"max_stdin_bytes"`
-	MaxTests          int    `yaml:"max_tests"`
-	JailRootDir       string `yaml:"jail_root_dir"`
-	NSJailBinary      string `yaml:"nsjail_binary"`
-	CgroupV2Mount     string `yaml:"cgroupv2_mount"`
+	HTTPAddr               string `yaml:"http_addr"`
+	MaxConcurrentJobs      int    `yaml:"max_concurrent_jobs"`
+	MaxQueueDepth          int    `yaml:"max_queue_depth"`
+	DrainTimeoutS          int    `yaml:"drain_timeout_s"`
+	ReadyzCacheTTLS        int    `yaml:"readyz_cache_ttl_s"`
+	MaxSourceBytes         int    `yaml:"max_source_bytes"`
+	MaxStdinBytes          int    `yaml:"max_stdin_bytes"`
+	MaxExpectedStdoutBytes int    `yaml:"max_expected_stdout_bytes"`
+	MaxTests               int    `yaml:"max_tests"`
+	JailRootDir            string `yaml:"jail_root_dir"`
+	NSJailBinary           string `yaml:"nsjail_binary"`
+	CgroupV2Mount          string `yaml:"cgroupv2_mount"`
 }
 
 func LoadServer(path string) (*ServerConfig, error) {
@@ -64,6 +65,9 @@ func (c *ServerConfig) applyDefaults() {
 	}
 	if c.MaxStdinBytes == 0 {
 		c.MaxStdinBytes = 64 * 1024
+	}
+	if c.MaxExpectedStdoutBytes == 0 {
+		c.MaxExpectedStdoutBytes = 1024 * 1024 // 1 MiB
 	}
 	if c.MaxTests == 0 {
 		c.MaxTests = 50

@@ -10,15 +10,29 @@ import (
 )
 
 const (
-	CodeBadJSON         = "bad_json"
-	CodeUnknownLanguage = "unknown_language"
-	CodeInvalidFilename = "invalid_filename"
-	CodeSourceTooLarge  = "source_too_large"
-	CodeStdinTooLarge   = "stdin_too_large"
-	CodeTooManyTests    = "too_many_tests"
-	CodeNoTests         = "no_tests"
-	CodeFlagNotAllowed  = "flag_not_allowed"
+	CodeBadJSON                = "bad_json"
+	CodeUnknownLanguage        = "unknown_language"
+	CodeInvalidFilename        = "invalid_filename"
+	CodeSourceTooLarge         = "source_too_large"
+	CodeStdinTooLarge          = "stdin_too_large"
+	CodeExpectedStdoutTooLarge = "expected_stdout_too_large"
+	CodeTooManyTests           = "too_many_tests"
+	CodeNoTests                = "no_tests"
+	CodeFlagNotAllowed         = "flag_not_allowed"
 )
+
+// denylistPrefixes are flag prefixes/tokens that are ALWAYS rejected
+// regardless of the per-language allow-list. These are the exact patterns
+// named in the spec §06 (security hole 3).
+// Rejection produces HTTP 400 with code "flag_not_allowed".
+var denylistPrefixes = []string{
+	"-fplugin",
+	"-x",
+	"-B",
+	"--specs",
+	"-Wl,",
+	"@", // response files
+}
 
 type ValidationError struct {
 	Code    string
@@ -62,6 +76,9 @@ func Validate(req *types.RunRequest, reg *config.Registry, srv *config.ServerCon
 	for i, t := range req.Tests {
 		if len(t.Stdin) > srv.MaxStdinBytes {
 			return newErr(CodeStdinTooLarge, "test[%d] stdin is %d bytes; max %d", i, len(t.Stdin), srv.MaxStdinBytes)
+		}
+		if srv.MaxExpectedStdoutBytes > 0 && len(t.ExpectedStdout) > srv.MaxExpectedStdoutBytes {
+			return newErr(CodeExpectedStdoutTooLarge, "test[%d] expected_stdout is %d bytes; max %d", i, len(t.ExpectedStdout), srv.MaxExpectedStdoutBytes)
 		}
 	}
 
@@ -116,10 +133,31 @@ func validateFilename(name string, lang *config.LanguageSpec) *ValidationError {
 	return nil
 }
 
+// checkDenylist returns an error if the flag matches any unconditionally
+// denied token. The denylist runs BEFORE the per-language allow-list.
+func checkDenylist(flag string) *ValidationError {
+	for _, prefix := range denylistPrefixes {
+		if flag == prefix || strings.HasPrefix(flag, prefix) {
+			return newErr(CodeFlagNotAllowed, "flag %q is not allowed (security policy)", flag)
+		}
+	}
+	// Reject absolute-include guards: flags starting with -I/ or -I absolute paths
+	// which could be used to include arbitrary host paths via compiler.
+	if strings.HasPrefix(flag, "-I/") {
+		return newErr(CodeFlagNotAllowed, "flag %q is not allowed (absolute include path)", flag)
+	}
+	return nil
+}
+
 func validateFlags(flags []string, rules []config.FlagRule, phase string) *ValidationError {
 	for _, f := range flags {
 		if f == "" || strings.ContainsAny(f, " \t\n\r") {
 			return newErr(CodeFlagNotAllowed, "%s flag %q contains whitespace or is empty", phase, f)
+		}
+
+		// Denylist runs unconditionally before allowlist.
+		if err := checkDenylist(f); err != nil {
+			return err
 		}
 
 		if !config.Allows(rules, f) {

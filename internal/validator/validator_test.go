@@ -16,6 +16,7 @@ func loadFixture(t *testing.T) (*config.ServerConfig, *config.Registry) {
 	srv := filepath.Join(dir, "server.yaml")
 	if err := os.WriteFile(srv, []byte(`max_source_bytes: 100
 max_stdin_bytes: 50
+max_expected_stdout_bytes: 80
 max_tests: 50`), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -28,6 +29,17 @@ max_tests: 50`), 0644); err != nil {
       args: ["{{source}}"]
       limits: { wall_time_s: 9, memory_kb: 102400, max_processes: 100 }
       flag_allowlist: ["-O", "-W*"]
+  - id: cpp
+    source_filename: solution.cpp
+    artifact: solution
+    build:
+      cmd: /usr/bin/g++
+      args: ["{{flags}}", "-o", "{{artifact}}", "{{source}}"]
+      limits: { wall_time_s: 20, memory_kb: 1048576, max_processes: 100 }
+      flag_allowlist: ["-O0", "-O1", "-O2", "-O3", "-Wall", "-std=*"]
+    run:
+      cmd: ./{{artifact}}
+      limits: { wall_time_s: 3, memory_kb: 524288, max_processes: 64 }
 `), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -76,6 +88,9 @@ func TestValidateCases(t *testing.T) {
 		{"stdin too large", func(r *types.RunRequest) {
 			r.Tests[0].Stdin = strings.Repeat("x", 51)
 		}, CodeStdinTooLarge},
+		{"expected_stdout too large", func(r *types.RunRequest) {
+			r.Tests[0].ExpectedStdout = strings.Repeat("x", 81)
+		}, CodeExpectedStdoutTooLarge},
 		{"filename with slash", func(r *types.RunRequest) {
 			r.SourceFilename = "../etc/passwd"
 		}, CodeInvalidFilename},
@@ -108,5 +123,49 @@ func TestValidateCases(t *testing.T) {
 				t.Fatalf("got code %q; want %q (msg=%q)", err.Code, c.code, err.Message)
 			}
 		})
+	}
+}
+
+// TestDenylist verifies that the unconditional flag denylist blocks
+// the exact tokens named in the spec §06 hole 3, regardless of what the
+// per-language allow-list contains.
+func TestDenylist(t *testing.T) {
+	sc, reg := loadFixture(t)
+
+	deniedFlags := []string{
+		"-fplugin=evil.so",
+		"-fplugin",
+		"-x", "-xc",
+		"-B/tmp",
+		"-B", "--specs=evil",
+		"-Wl,-rpath,/evil",
+		"@response_file",
+		"-I/etc",
+	}
+	for _, flag := range deniedFlags {
+		t.Run("deny "+flag, func(t *testing.T) {
+			r := base()
+			r.Language = "cpp"
+			r.Build = &types.Phase{Flags: []string{flag}}
+			err := Validate(r, reg, sc)
+			if err == nil {
+				t.Fatalf("flag %q should be denied but was accepted", flag)
+			}
+			if err.Code != CodeFlagNotAllowed {
+				t.Fatalf("flag %q: got code %q; want %q", flag, err.Code, CodeFlagNotAllowed)
+			}
+		})
+	}
+}
+
+// TestAllowlistPassesSafe verifies that safe flags on the per-language
+// allowlist still pass after the denylist check.
+func TestAllowlistPassesSafe(t *testing.T) {
+	sc, reg := loadFixture(t)
+	r := base()
+	r.Language = "cpp"
+	r.Build = &types.Phase{Flags: []string{"-O2", "-Wall", "-std=c++17"}}
+	if err := Validate(r, reg, sc); err != nil {
+		t.Fatalf("safe flags should pass: %v", err)
 	}
 }
