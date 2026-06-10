@@ -26,15 +26,30 @@ WORKDIR /src
 COPY go.mod ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/goboxd ./cmd/goboxd
+RUN CGO_ENABLED=0 go build -trimpath \
+    -ldflags="-s -w \
+    -X goboxd/internal/api.Version=$(git describe --tags --always --dirty 2>/dev/null || echo dev) \
+    -X goboxd/internal/api.Commit=$(git rev-parse --short HEAD 2>/dev/null || echo unknown) \
+    -X goboxd/internal/api.GoVersion=$(go env GOVERSION)" \
+    -o /out/goboxd ./cmd/goboxd
 
 # ---- Runtime image ----
 FROM debian:${DEBIAN_VERSION}-slim AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        ca-certificates libnl-route-3-200 libprotobuf32 python3 g++ binutils \
+        ca-certificates libnl-route-3-200 libprotobuf32 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=nsjail-builder /usr/local/bin/nsjail /usr/local/bin/nsjail
 COPY --from=builder        /out/goboxd          /usr/local/bin/goboxd
 COPY configs               ./configs
+COPY scripts/lang_install  ./scripts/lang_install
+
+# Install all language toolchains. Each script must exit 1 on failure.
+# apt-get update runs once before the loop.
+RUN apt-get update && \
+    for f in ./scripts/lang_install/*.sh; do \
+        echo "=== Installing: $f ===" && sh "$f" || exit 1; \
+    done && \
+    rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/goboxd"]
