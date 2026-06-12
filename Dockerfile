@@ -32,7 +32,17 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/goboxd ./cmd/gobox
 FROM debian:${DEBIAN_VERSION}-slim AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates libnl-route-3-200 libprotobuf32 python3 g++ binutils \
+        openjdk-17-jdk-headless ruby curl xz-utils \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Zig from official release
+RUN mkdir -p /tmp/zig && cd /tmp/zig && \
+    curl -fL -o zig.tar.xz https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz && \
+    tar -xJ -f zig.tar.xz && \
+    mv zig-linux-x86_64-0.13.0 /usr/local/zig && \
+    ln -s /usr/local/zig/zig /usr/bin/zig && \
+    rm -rf /tmp/zig
+
 COPY --from=nsjail-builder /usr/local/bin/nsjail /usr/local/bin/nsjail
 COPY --from=builder        /out/goboxd          /usr/local/bin/goboxd
 COPY configs               ./configs

@@ -1,0 +1,7 @@
+{
+  "language": "ruby",
+  "source": "puts \"bye\"\n",
+  "tests": [
+    {"stdin": "", "expected_stdout": "hi\n"}
+  ]
+}

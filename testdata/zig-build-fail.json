@@ -1,0 +1,8 @@
+{
+  "language": "zig",
+  "source": "const std = @import(\"std\");\npub fn main() void {\n    std.debug.print(\"hi\\n\", .{})\n}\n",
+  "build": {"flags": ["-O", "ReleaseFast"]},
+  "tests": [
+    {"stdin": "", "expected_stdout": "hi\n"}
+  ]
+}

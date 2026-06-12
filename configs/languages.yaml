@@ -41,3 +41,64 @@ languages:
         max_processes: 64
     smoke_probe_cmd: /usr/bin/g++
     smoke_probe: ["--version"]
+
+  - id: java
+    name: Java
+    source_filename_strategy: from_request
+    artifact: Main
+    build:
+      cmd: /usr/bin/javac
+      args: ["{{flags}}", "{{source}}"]
+      limits:
+        wall_time_s: 10
+        memory_kb: 1048576
+        max_processes: 100
+      flag_allowlist:
+        - "-Xmaxerrs"
+        - "-Xmaxwarns"
+        - "-nowarn"
+    run:
+      cmd: /usr/bin/java
+      args: ["-cp", ".", "{{artifact}}"]
+      limits:
+        wall_time_s: 6
+        memory_kb: 524288
+        max_processes: 100
+    smoke_probe_cmd: /usr/bin/java
+    smoke_probe: ["-version"]
+
+  - id: ruby
+    name: Ruby
+    source_filename: solution.rb
+    run:
+      cmd: /usr/bin/ruby
+      args: ["{{source}}"]
+      limits:
+        wall_time_s: 9
+        memory_kb: 102400
+        max_processes: 100
+    smoke_probe_cmd: /usr/bin/ruby
+    smoke_probe: ["--version"]
+
+  - id: zig
+    name: Zig
+    source_filename: solution.zig
+    artifact: solution
+    build:
+      cmd: /usr/bin/zig
+      args: ["build-exe", "-O", "ReleaseFast", "{{source}}", "-femit-bin={{artifact}}"]
+      limits:
+        wall_time_s: 30
+        memory_kb: 2097152
+        max_processes: 100
+      flag_allowlist:
+        - "-O"
+        - "-fsingle-threaded"
+    run:
+      cmd: ./{{artifact}}
+      limits:
+        wall_time_s: 3
+        memory_kb: 524288
+        max_processes: 64
+    smoke_probe_cmd: /usr/bin/zig
+    smoke_probe: ["version"]
