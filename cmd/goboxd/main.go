@@ -63,9 +63,9 @@ func main() {
 	httpSrv := &http.Server{
 		Addr:              srvCfg.HTTPAddr,
 		Handler:           srv.Handler(),
-		ReadTimeout:       10 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
-		IdleTimeout:       60 * time.Second,
+		WriteTimeout:      120 * time.Second,
+		IdleTimeout:       120 * time.Second,
 		MaxHeaderBytes:    1 << 14,
 	}
 

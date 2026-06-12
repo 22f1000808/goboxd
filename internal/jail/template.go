@@ -48,7 +48,7 @@ envar: "HOME=/tmp"
 envar: "GOPATH=/tmp/gopath"
 envar: "GOCACHE=/tmp/gocache"
 envar: "GOROOT=/usr/lib/go-1.19"
-envar: "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8"
+envar: "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Xverify:none -Xms160m -Xmx160m"
 
 {{ if not .AllowNetwork -}}
 clone_newnet: true

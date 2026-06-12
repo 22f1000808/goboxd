@@ -1,0 +1,17 @@
+# docker-compose.loadtest.yml
+# Resource-capped override for reproducible load testing.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.loadtest.yml up -d --build
+#
+# Enforces the spec-mandated caps:
+#   - 2 vCPU
+#   - 2 GB RAM
+services:
+  goboxd:
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+        reservations:
+          cpus: "2.0"
+          memory: 2g

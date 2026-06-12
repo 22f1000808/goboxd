@@ -1,11 +1,11 @@
 http_addr: ":8080"
-max_concurrent_jobs: 0                 # 0 -> runtime.NumCPU()
-max_queue_depth: 100                   # bounded; 503+Retry-After when full
+max_concurrent_jobs: 60
+max_queue_depth: 200
 drain_timeout_s: 45
 readyz_cache_ttl_s: 30
-max_source_bytes: 262144               # 256 KiB
-max_stdin_bytes: 65536                 # 64 KiB per test
-max_expected_stdout_bytes: 1048576     # 1 MiB per test
+max_source_bytes: 262144
+max_stdin_bytes: 65536
+max_expected_stdout_bytes: 1048576
 max_tests: 50
 jail_root_dir: /var/lib/goboxd/jails
 nsjail_binary: /usr/local/bin/nsjail

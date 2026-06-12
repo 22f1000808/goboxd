@@ -99,15 +99,16 @@ languages:
         memory_kb: 524288
         max_processes: 100
       flag_allowlist:
-        - "-encoding"
-        - "UTF-8"
         - "-g"
+        - "-nowarn"
         - "-verbose"
+        - "-deprecation"
+        - "-encoding"
     run:
       cmd: /usr/bin/java
-      args: ["-cp", "/work", "{{artifact}}"]
+      args: ["-Xmx400m", "-Xms64m", "{{artifact}}"]
       limits:
-        wall_time_s: 10
+        wall_time_s: 20
         memory_kb: 524288
         max_processes: 200
     smoke_probe_cmd: /usr/bin/java
